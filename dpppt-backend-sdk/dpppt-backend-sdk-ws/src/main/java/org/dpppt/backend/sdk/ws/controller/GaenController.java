@@ -11,6 +11,7 @@ package org.dpppt.backend.sdk.ws.controller;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.SignatureException;
@@ -242,7 +243,12 @@ public class GaenController {
 		var exposedKeys = dataService.getSortedExposedForKeyDate(keyDate, publishedafter, publishedUntil);
 		exposedKeys = fakeKeyService.fillUpKeys(exposedKeys, keyDate);
 		if (exposedKeys.isEmpty()) {
+			var digest = MessageDigest.getInstance("SHA256");
+			digest.update(Long.toString(keyDate).getBytes());
+			digest.update(Long.toString(publishedUntil).getBytes());
+			var etag = Base64.getEncoder().encodeToString(digest.digest());
 			return ResponseEntity.noContent().cacheControl(CacheControl.maxAge(exposedListCacheControl))
+					.eTag(etag)
 					.header("X-PUBLISHED-UNTIL", Long.toString(publishedUntil)).build();
 		}
 
