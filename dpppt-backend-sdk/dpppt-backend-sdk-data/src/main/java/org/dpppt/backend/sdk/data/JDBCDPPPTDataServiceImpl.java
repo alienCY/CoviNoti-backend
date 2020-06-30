@@ -44,7 +44,7 @@ public class JDBCDPPPTDataServiceImpl implements DPPPTDataService {
 	public void upsertExposee(Exposee exposee, String appSource) {
 		String sql = null;
 		if (dbType.equals(PGSQL)) {
-			sql = "insert into t_exposed (key, key_date, countries_visited, app_source) values (:key, :key_date, :countries_visited, :app_source)"
+			sql = "insert into t_exposed (key, key_date, countries_visited, app_source) values (:key, :key_date, :countries_visited::text[], :app_source)"
 					+ " on conflict on constraint key do nothing";
 		} else {
 			sql = "merge into t_exposed using (values(cast(:key as varchar(10000)), cast(:key_date as date), cast(:countries_visited as text), cast(:app_source as varchar(50))))"
@@ -55,7 +55,7 @@ public class JDBCDPPPTDataServiceImpl implements DPPPTDataService {
 		params.addValue("key", exposee.getKey());
 		params.addValue("app_source", appSource);
 		params.addValue("key_date", new Date(exposee.getKeyDate()));
-		params.addValue("countries_visited", exposee.getCountryCodeList());
+		params.addValue("countries_visited", exposee.getCountryCodeList().toArray(new String[0]));
 		jt.update(sql, params);
 	}
 	@Override
