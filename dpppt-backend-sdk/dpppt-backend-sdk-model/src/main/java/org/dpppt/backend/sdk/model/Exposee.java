@@ -53,8 +53,8 @@ public class Exposee {
 		this.keyDate = keyDate;
 	}
 
-	public String getCountryCodeList() {
-		return countryCodeList.toString();
+	public ArrayList<String> getCountryCodeList() {
+		return countryCodeList;
 	}
 
 	public void setCountryCodeList(ArrayList<String> countryCodeList) {

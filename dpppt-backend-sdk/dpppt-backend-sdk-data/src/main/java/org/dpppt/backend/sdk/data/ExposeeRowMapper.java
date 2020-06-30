@@ -25,12 +25,7 @@ public class ExposeeRowMapper implements RowMapper<Exposee> {
 		exposee.setKey(rs.getString("key"));
 		exposee.setId(rs.getInt("pk_exposed_id"));
 		exposee.setKeyDate(rs.getTimestamp("key_date").getTime());
-
-		String list = rs.getString("countries_visited");
-		list = list.replace("[", "");
-		list = list.replace("]", "");
-
-		exposee.setCountryCodeList(new ArrayList<>(Arrays.asList(list)));
+		exposee.setCountryCodeList((ArrayList<String>) rs.getArray("countries_visited").getArray());
 		return exposee;
 	}
 }
