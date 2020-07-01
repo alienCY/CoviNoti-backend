@@ -26,11 +26,13 @@ public class ExposeeRowMapper implements RowMapper<Exposee> {
 		exposee.setId(rs.getInt("pk_exposed_id"));
 		exposee.setKeyDate(rs.getTimestamp("key_date").getTime());
 
-		String list = rs.getString("countries_visited");
-		list = list.replace("[", "");
-		list = list.replace("]", "");
+		Object[] array = (Object[]) rs.getArray("countries_of_interest").getArray();
+		ArrayList<String> list = new ArrayList<>();
+		for (Object o : array) {
+			list.add((String) o);
+		}
+		exposee.setCountryCodeList(list);
 
-		exposee.setCountryCodeList(new ArrayList<>(Arrays.asList(list)));
 		return exposee;
 	}
 }
