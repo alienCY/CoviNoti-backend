@@ -63,12 +63,12 @@ public class JDBCDPPPTDataServiceImpl implements DPPPTDataService {
 	public void upsertExposees(List<Exposee> exposees, String appSource) {
 		String sql = null;
 		if (dbType.equals(PGSQL)) {
-			sql = "insert into t_exposed (key, key_date, app_source) values (:key, :key_date, :app_source)"
+			sql = "insert into t_exposed (key, key_date, countries_of_interest, app_source) values (:key, :key_date, :countries_of_interest::text[], :app_source)"
 					+ " on conflict on constraint key do nothing";
 		} else {
-			sql = "merge into t_exposed using (values(cast(:key as varchar(10000)), cast(:key_date as date), cast(:app_source as varchar(50))))"
-					+ " as vals(key, key_date, app_source) on t_exposed.key = vals.key"
-					+ " when not matched then insert (key, key_date, app_source) values (vals.key, vals.key_date, vals.app_source)";
+			sql = "merge into t_exposed using (values(cast(:key as varchar(10000)), cast(:key_date as date), cast(:countries_of_interest as text[]), cast(:app_source as varchar(50))))"
+					+ " as vals(key, key_date, countries_of_interest, app_source) on t_exposed.key = vals.key"
+					+ " when not matched then insert (key, key_date, countries_of_interest, app_source) values (vals.key, vals.key_date, vals.countries_of_interest, vals.app_source)";
 		}
 		var parameterList = new ArrayList<MapSqlParameterSource>();
 		for(var exposee : exposees) {
@@ -76,6 +76,7 @@ public class JDBCDPPPTDataServiceImpl implements DPPPTDataService {
 			params.addValue("key", exposee.getKey());
 			params.addValue("app_source", appSource);
 			params.addValue("key_date", new Date(exposee.getKeyDate()));
+			params.addValue("countries_of_interest", exposee.getCountryCodeList().toArray(new String[0]));
 			parameterList.add(params);
 		}
 		jt.batchUpdate(sql, parameterList.toArray(new MapSqlParameterSource[0]));
