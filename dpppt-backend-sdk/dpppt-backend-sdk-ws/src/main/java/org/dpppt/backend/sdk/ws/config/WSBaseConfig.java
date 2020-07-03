@@ -102,7 +102,7 @@ public abstract class WSBaseConfig implements SchedulingConfigurer, WebMvcConfig
 	@Value("${ws.retentiondays: 14}")
 	int retentionDays;
 
-	@Value("${ws.exposedlist.batchlength: 7200000}")
+	@Value("${ws.exposedlist.batchlength: 120000}")
 	long batchLength;
 
 	@Value("${ws.exposedlist.requestTime: 1500}")
