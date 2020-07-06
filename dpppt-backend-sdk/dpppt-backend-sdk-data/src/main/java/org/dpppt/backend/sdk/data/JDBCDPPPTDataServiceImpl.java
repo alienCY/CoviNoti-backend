@@ -111,7 +111,7 @@ public class JDBCDPPPTDataServiceImpl implements DPPPTDataService {
 	public List<Exposee> getSortedExposedForBatchReleaseTimeAndCountry(long batchReleaseTime, long batchLength, String country) {
 		String sql = "select pk_exposed_id, key, key_date, countries_of_interest from t_exposed where :country = any(countries_of_interest) and received_at >= :startBatch and received_at < :batchReleaseTime order by pk_exposed_id desc";
 		MapSqlParameterSource params = new MapSqlParameterSource();
-		params.addValue("country",country);
+		params.addValue("country", country);
 		params.addValue("batchReleaseTime", Date.from(Instant.ofEpochMilli(batchReleaseTime)));
 		params.addValue("startBatch", Date.from(Instant.ofEpochMilli(batchReleaseTime - batchLength)));
 		return jt.query(sql, params, new ExposeeRowMapper());

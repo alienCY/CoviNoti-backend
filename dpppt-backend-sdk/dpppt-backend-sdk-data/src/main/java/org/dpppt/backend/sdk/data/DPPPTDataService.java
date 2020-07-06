@@ -52,11 +52,20 @@ public interface DPPPTDataService {
 	List<Exposee> getSortedExposedForBatchReleaseTime(long batchReleaseTime, long batchLength);
 
 	/**
+	 * Returns all exposees for the given batch and country.
+	 *
+	 * @param batchReleaseTime
+	 * @param batchLength
+	 * @param country
+	 * @return
+	 */
+	List<Exposee> getSortedExposedForBatchReleaseTimeAndCountry(long batchReleaseTime, long batchLength, String country);
+
+	/**
 	 * deletes entries older than retentionperiod
 	 * 
 	 * @param retentionPeriod
 	 */
 	void cleanDB(Duration retentionPeriod);
 
-    List<Exposee> getSortedExposedForBatchReleaseTimeAndCountry(long batchReleaseTime, long batchLength, String country);
 }
