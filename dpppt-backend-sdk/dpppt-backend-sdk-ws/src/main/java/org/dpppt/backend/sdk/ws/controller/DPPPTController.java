@@ -15,9 +15,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 
 import javax.validation.Valid;
 
@@ -172,14 +170,19 @@ public class DPPPTController {
 	}
 
 	@CrossOrigin(origins = { "https://editor.swagger.io" })
-	@GetMapping(value = "/exposed/{batchReleaseTime}", produces = "application/x-protobuf")
+	@GetMapping(value = "/exposed/{batchReleaseTime}/{coi}", produces = "application/x-protobuf")
 	public @ResponseBody ResponseEntity<Exposed.ProtoExposedList> getExposedByBatch(@PathVariable long batchReleaseTime,
-			WebRequest request) throws BadBatchReleaseTimeException {
+																					@PathVariable String coi, WebRequest request) throws BadBatchReleaseTimeException {
 		if(!validationUtils.isValidBatchReleaseTime(batchReleaseTime)) {
 			return ResponseEntity.notFound().build();
 		}
 
-		List<Exposee> exposeeList = dataService.getSortedExposedForBatchReleaseTime(batchReleaseTime, batchLength);
+		String[] coiArray = coi.split(", ");
+		List<Exposee> exposeeList = new ArrayList<>();
+		for(String country : coiArray) {
+			exposeeList.addAll(dataService.getSortedExposedForBatchReleaseTimeAndCountry(batchReleaseTime, batchLength, country));
+		}
+
 		List<Exposed.ProtoExposee> exposees = new ArrayList<>();
 		for (Exposee exposee : exposeeList) {
 			Exposed.ProtoExposee protoExposee = Exposed.ProtoExposee.newBuilder()
