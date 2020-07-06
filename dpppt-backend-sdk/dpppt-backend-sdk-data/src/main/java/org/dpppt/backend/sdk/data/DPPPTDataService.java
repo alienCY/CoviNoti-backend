@@ -58,4 +58,5 @@ public interface DPPPTDataService {
 	 */
 	void cleanDB(Duration retentionPeriod);
 
+    List<Exposee> getSortedExposedForBatchReleaseTimeAndCountry(long batchReleaseTime, long batchLength, String country);
 }
