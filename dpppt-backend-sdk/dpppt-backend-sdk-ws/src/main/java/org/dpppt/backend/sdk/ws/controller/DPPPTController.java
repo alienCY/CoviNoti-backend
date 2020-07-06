@@ -16,6 +16,10 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -169,6 +173,12 @@ public class DPPPTController {
 				.header("X-BATCH-RELEASE-TIME", Long.toString(batchReleaseTime)).body(overview);
 	}
 
+	//Helper function to remove duplicate keys from returns
+	public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+		Set<Object> seen = ConcurrentHashMap.newKeySet();
+		return t -> seen.add(keyExtractor.apply(t));
+	}
+
 	@CrossOrigin(origins = { "https://editor.swagger.io" })
 	@GetMapping(value = "/exposed/{batchReleaseTime}/{coi}", produces = "application/x-protobuf")
 	public @ResponseBody ResponseEntity<Exposed.ProtoExposedList> getExposedByBatch(@PathVariable long batchReleaseTime,
@@ -178,10 +188,12 @@ public class DPPPTController {
 		}
 
 		String[] coiArray = coi.split(", ");
-		List<Exposee> exposeeList = new ArrayList<>();
+		List<Exposee> exposeeListAll = new ArrayList<>();
 		for(String country : coiArray) {
-			exposeeList.addAll(dataService.getSortedExposedForBatchReleaseTimeAndCountry(batchReleaseTime, batchLength, country));
+			exposeeListAll.addAll(dataService.getSortedExposedForBatchReleaseTimeAndCountry(batchReleaseTime, batchLength, country));
 		}
+
+		List<Exposee> exposeeList = exposeeListAll.stream().filter(distinctByKey(Exposee::getKey)).collect(Collectors.toList());
 
 		List<Exposed.ProtoExposee> exposees = new ArrayList<>();
 		for (Exposee exposee : exposeeList) {
