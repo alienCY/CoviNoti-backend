@@ -35,22 +35,14 @@ import org.dpppt.backend.sdk.ws.security.ValidateRequest;
 import org.dpppt.backend.sdk.ws.security.ValidateRequest.InvalidDateException;
 import org.dpppt.backend.sdk.ws.util.ValidationUtils;
 import org.dpppt.backend.sdk.ws.util.ValidationUtils.BadBatchReleaseTimeException;
+import org.dpppt.backend.sdk.ws.gateway.Gateway;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
 
 import com.google.protobuf.ByteString;
@@ -66,6 +58,7 @@ public class DPPPTController {
 	private final ValidationUtils validationUtils;
 	private final long batchLength;
 	private final long requestTime;
+	public Gateway federationGateway;
 
 
 	public DPPPTController(DPPPTDataService dataService, String appSource,
@@ -78,12 +71,13 @@ public class DPPPTController {
 		this.validationUtils = validationUtils;
 		this.batchLength = batchLength;
 		this.requestTime = requestTime;
+		this.federationGateway = new Gateway(dataService, appSource);
 	}
 
 	@CrossOrigin(origins = { "https://editor.swagger.io" })
 	@GetMapping(value = "")
 	public @ResponseBody ResponseEntity<String> hello() {
-		return ResponseEntity.ok().header("X-HELLO", "dp3t").body("Hello from DP3T WS");
+		return ResponseEntity.ok().header("X-HELLO", "dp3t").body("<h1>Hello from DP3T WS</h1>");
 	}
 
 	@CrossOrigin(origins = { "https://editor.swagger.io" })
@@ -182,7 +176,7 @@ public class DPPPTController {
 	@CrossOrigin(origins = { "https://editor.swagger.io" })
 	@GetMapping(value = "/exposed/{batchReleaseTime}/{coi}", produces = "application/x-protobuf")
 	public @ResponseBody ResponseEntity<Exposed.ProtoExposedList> getExposedByBatch(@PathVariable long batchReleaseTime,
-	      @PathVariable String coi, WebRequest request) throws BadBatchReleaseTimeException {
+	       @PathVariable String coi, WebRequest request) throws BadBatchReleaseTimeException {
 		if(!validationUtils.isValidBatchReleaseTime(batchReleaseTime)) {
 			return ResponseEntity.notFound().build();
 		}
@@ -231,6 +225,17 @@ public class DPPPTController {
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public ResponseEntity<Object> invalidArguments() {
 		return ResponseEntity.badRequest().build();
+	}
+
+	@CrossOrigin(origins = { "https://editor.swagger.io" })
+	@GetMapping(value = "/notify")
+	public @ResponseBody ResponseEntity<String> getCallback(
+			@RequestParam(value = "batchTag") String batchTag,
+			@RequestParam(value = "date") String date)
+	{
+		federationGateway.addToBeDownloadedBatchTag(date,batchTag);
+		federationGateway.downloadNewKeys(date);
+		return ResponseEntity.ok().build();
 	}
 
 }

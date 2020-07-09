@@ -12,7 +12,9 @@ package org.dpppt.backend.sdk.ws.config;
 
 import java.security.KeyPair;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -285,9 +287,15 @@ public abstract class WSBaseConfig implements SchedulingConfigurer, WebMvcConfig
 			logger.info("DB cleanup up");
 		}, 60 * 60 * 1000L));
 
+		taskRegistrar.addFixedRateTask(new IntervalTask(() -> {
+			logger.info("Automatic Federation Gateway Download Request");
+			dppptSDKController().federationGateway.downloadNewKeys(DateTimeFormatter.ofPattern("yyyy-MM-dd").format(LocalDateTime.now()));
+		}, 8 * 60 * 60 * 1000L));
+
 		var trigger = new CronTrigger("0 0 2 * * *", TimeZone.getTimeZone(ZoneOffset.UTC));
 		taskRegistrar.addCronTask(new CronTask(() -> fakeKeyService().updateFakeKeys(), trigger));
 	}
+
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
 		registry.addInterceptor(securityHeaderInjector());
