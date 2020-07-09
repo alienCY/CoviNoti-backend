@@ -233,7 +233,7 @@ public class DPPPTController {
 			@RequestParam(value = "batchTag") String batchTag,
 			@RequestParam(value = "date") String date)
 	{
-		federationGateway.addToBeDownloadedBatchTag(date,batchTag);
+		federationGateway.addToBeDownloaded(date,batchTag);
 		federationGateway.downloadNewKeys(date);
 		return ResponseEntity.ok().build();
 	}

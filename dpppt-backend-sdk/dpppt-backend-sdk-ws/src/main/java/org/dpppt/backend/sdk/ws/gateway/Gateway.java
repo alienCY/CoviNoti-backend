@@ -1,31 +1,43 @@
 package org.dpppt.backend.sdk.ws.gateway;
 
 import org.dpppt.backend.sdk.model.Exposee;
-import org.dpppt.backend.sdk.ws.gateway.ResponseParser;
 import org.dpppt.backend.sdk.data.DPPPTDataService;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.List;
+import java.util.*;
 
-public class Gateway extends DownloadBatchTags {
+public class Gateway {
 
     private final DPPPTDataService dataService;
     private final String appSource;
+    private Map<String, String> lastBatchTagMap;
+
+    //TODO: check if content with specific batchTag has been downloaded
+    private Map<String, Set<String>> toBeDownloaded;
+
+    public void addToBeDownloaded(String date, String batchTag) {
+        Set<String> set = toBeDownloaded.containsKey(date) ? toBeDownloaded.get(date) : new HashSet<>();
+        set.add(batchTag);
+        toBeDownloaded.put(date,set);
+    }
 
     public Gateway(DPPPTDataService dataService, String appSource) {
         this.dataService = dataService;
         this.appSource = appSource;
+        this.lastBatchTagMap = new HashMap<>();
+        this.toBeDownloaded = new HashMap<>();
     }
 
     public boolean downloadNewKeys(String date)
     {
         try {
-            HttpResponse<String> response = download(date, getLastBatchTag(date));
+            HttpResponse<String> response = download(date, lastBatchTagMap.get(date));
             ResponseParser parser = new ResponseParser(response.body());
             List<Exposee> exposees = parser.getExposeeList();
             dataService.upsertExposees(exposees, appSource);
+            lastBatchTagMap.put(date, response.headers().map().get("batchTag").get(0));
             return true;
         } catch (Exception e) {
             System.out.println(e);
