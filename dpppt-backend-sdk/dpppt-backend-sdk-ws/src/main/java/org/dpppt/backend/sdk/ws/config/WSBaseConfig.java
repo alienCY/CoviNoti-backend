@@ -104,7 +104,7 @@ public abstract class WSBaseConfig implements SchedulingConfigurer, WebMvcConfig
 	@Value("${ws.retentiondays: 14}")
 	int retentionDays;
 
-	@Value("${ws.exposedlist.batchlength: 120000}")
+	@Value("${ws.exposedlist.batchlength}")
 	long batchLength;
 
 	@Value("${ws.exposedlist.requestTime: 1500}")
@@ -131,6 +131,12 @@ public abstract class WSBaseConfig implements SchedulingConfigurer, WebMvcConfig
 	String keyIdentifier;
 	@Value("${ws.app.gaen.algorithm:1.2.840.10045.4.3.2}")
 	String gaenAlgorithm;
+
+	@Value("${gateway.downloadInterval}")
+	long downloadInterval;
+
+	@Value("${gateway.uploadInterval}")
+	long uploadInterval;
 
 	@Autowired(required = false)
 	ValidateRequest requestValidator;
@@ -290,9 +296,8 @@ public abstract class WSBaseConfig implements SchedulingConfigurer, WebMvcConfig
 		taskRegistrar.addFixedRateTask(new IntervalTask(() -> {
 			logger.info("Automatic Federation Gateway Download Request");
 			dppptSDKController().federationGateway.downloadNewKeys(DateTimeFormatter.ofPattern("yyyy-MM-dd").format(LocalDateTime.now()));
-		}, 6 * 60 * 60 * 1000L));
+		}, downloadInterval));
 
-		long uploadInterval = 8 * 60 * 60 * 1000L;
 		taskRegistrar.addFixedRateTask(new IntervalTask(() -> {
 			logger.info("Automatic Federation Gateway Upload Request");
 			dppptSDKController().federationGateway.uploadNewKeys(uploadInterval);

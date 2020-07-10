@@ -1,6 +1,6 @@
 package org.dpppt.backend.sdk.ws.gateway;
 
-import com.google.gson.Gson;
+import com.google.gson.*;
 import org.dpppt.backend.sdk.model.Exposee;
 import java.util.ArrayList;
 import java.util.Date;
@@ -57,6 +57,16 @@ public class ResponseParser {
             data.keys.add(inData);
         }
         return gson.toJson(data);
+    }
+
+    public String prettifyJson(String uglyJson) {
+        Gson gson = new GsonBuilder()
+                .setPrettyPrinting()
+                .disableHtmlEscaping()
+                .create();
+
+        JsonElement je = JsonParser.parseString(uglyJson);
+        return gson.toJson(je);
     }
 
 }

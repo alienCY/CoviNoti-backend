@@ -39,6 +39,9 @@ public class Gateway {
             List<Exposee> exposees = responseParser.getExposeeList(response.body());
             dataService.upsertExposees(exposees, appSource);
             lastBatchTagMap.put(date, response.headers().map().get("batchTag").get(0));
+            //Console output
+            System.out.println("Download Response:");
+            System.out.println(responseParser.prettifyJson(response.body()));
             return true;
         } catch (Exception e) {
             System.out.println(e);
@@ -73,8 +76,9 @@ public class Gateway {
             //TODO: query better to get only Cypriots
             List<Exposee> exposees = dataService.getSortedExposedForBatchReleaseTimeAndCountry(Instant.now().toEpochMilli(), interval, "CY");
             String json = responseParser.getJson(exposees);
-            System.out.println(json);
             HttpResponse<String> response = upload(json,"anything","a");
+            //Console output :
+            System.out.println(responseParser.prettifyJson(json));
             System.out.println(response.statusCode() == 200 ? "Upload complete!" : "Upload Error!\n" + response.body());
             return true;
         }
