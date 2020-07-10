@@ -65,8 +65,7 @@ public class ResponseParser {
                 .disableHtmlEscaping()
                 .create();
 
-        JsonElement je = JsonParser.parseString(uglyJson);
-        return gson.toJson(je);
+        return gson.toJson(JsonParser.parseString(uglyJson));
     }
 
 }
