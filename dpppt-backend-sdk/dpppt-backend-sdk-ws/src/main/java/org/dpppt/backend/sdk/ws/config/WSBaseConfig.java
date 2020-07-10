@@ -290,7 +290,13 @@ public abstract class WSBaseConfig implements SchedulingConfigurer, WebMvcConfig
 		taskRegistrar.addFixedRateTask(new IntervalTask(() -> {
 			logger.info("Automatic Federation Gateway Download Request");
 			dppptSDKController().federationGateway.downloadNewKeys(DateTimeFormatter.ofPattern("yyyy-MM-dd").format(LocalDateTime.now()));
-		}, 8 * 60 * 60 * 1000L));
+		}, 6 * 60 * 60 * 1000L));
+
+		long uploadInterval = 8 * 60 * 60 * 1000L;
+		taskRegistrar.addFixedRateTask(new IntervalTask(() -> {
+			logger.info("Automatic Federation Gateway Upload Request");
+			dppptSDKController().federationGateway.uploadNewKeys(uploadInterval);
+		}, uploadInterval));
 
 		var trigger = new CronTrigger("0 0 2 * * *", TimeZone.getTimeZone(ZoneOffset.UTC));
 		taskRegistrar.addCronTask(new CronTask(() -> fakeKeyService().updateFakeKeys(), trigger));
