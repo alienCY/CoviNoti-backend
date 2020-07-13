@@ -2,6 +2,8 @@ package org.dpppt.backend.sdk.ws.gateway;
 
 import org.dpppt.backend.sdk.model.Exposee;
 import org.dpppt.backend.sdk.data.DPPPTDataService;
+import org.dpppt.backend.sdk.ws.security.secrets.Secrets;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -13,6 +15,7 @@ public class Gateway {
 
     private final DPPPTDataService dataService;
     private final String appSource;
+    private Secrets secrets;
     private Map<String, String> lastBatchTagMap;
     private Map<String, Set<String>> toBeDownloaded;
     private final ResponseParser responseParser;
@@ -20,6 +23,7 @@ public class Gateway {
     public Gateway(DPPPTDataService dataService, String appSource) {
         this.dataService = dataService;
         this.appSource = appSource;
+        this.secrets = new Secrets();
         this.lastBatchTagMap = new HashMap<>();
         this.toBeDownloaded = new HashMap<>();
         this.responseParser = new ResponseParser();
@@ -57,7 +61,7 @@ public class Gateway {
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create("http://iti-386.iti.gr:57000/api/diagnosiskeys/download/"+date))
                 .setHeader("content-type", "application/json")
-                .setHeader("token", "24beac0f63eaf1183893f19ba2f7d3b008fb889e");
+                .setHeader("token", secrets.getValue("token"));
 
         if(batchTag != null) {
             requestBuilder.setHeader("batchTag", batchTag);
@@ -75,11 +79,14 @@ public class Gateway {
         try{
             //TODO: query better to get only Cypriots
             List<Exposee> exposees = dataService.getSortedExposedForBatchReleaseTimeAndCountry(Instant.now().toEpochMilli(), interval, "CY");
-            String json = responseParser.getJson(exposees);
-            HttpResponse<String> response = upload(json,"anything","a");
-            //Console output :
-            System.out.println(responseParser.prettifyJson(json));
-            System.out.println(response.statusCode() == 200 ? "Upload complete!" : "Upload Error!\n" + response.body());
+            if(exposees.size() > 0) {
+                String json = responseParser.getJson(exposees);
+                HttpResponse<String> response = upload(json, "a", "b");
+                //Console output :
+                System.out.println(responseParser.prettifyJson(json));
+                System.out.println(response.statusCode() == 200 ? "Upload complete!" : "Upload Error!\n" + response.body());
+            }
+            else {System.out.println("There are no new keys to upload.");}
             return true;
         }
         catch (Exception e) {
@@ -94,7 +101,7 @@ public class Gateway {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://iti-386.iti.gr:57000/api/diagnosiskeys/update/"))
-                .setHeader("token", "24beac0f63eaf1183893f19ba2f7d3b008fb889e")
+                .setHeader("token", secrets.getValue("token"))
                 .setHeader("content-type", "application/json")
                 .setHeader("batchTag", batchTag)
                 .setHeader("batchSignature", batchSignature)

@@ -38,4 +38,7 @@ hs_err_pid*
 # maven
 **/target
 **/generated
-dpppt-backend-sdk/dpppt-backend-sdk-ws/src/main/resources/application.properties
+
+# files
+dpppt-backend-sdk/dpppt-backend-sdk-ws/src/main/java/org/dpppt/backend/sdk/ws/security/secrets/secrets.json
+dpppt-backend-sdk/dpppt-backend-sdk-ws/src/main/resources/secrets.properties

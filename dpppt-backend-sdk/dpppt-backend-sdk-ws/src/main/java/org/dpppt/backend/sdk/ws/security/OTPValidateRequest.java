@@ -15,6 +15,7 @@ import com.github.openjson.JSONObject;
 import org.dpppt.backend.sdk.model.ExposeeRequest;
 import org.dpppt.backend.sdk.model.gaen.GaenKey;
 import org.dpppt.backend.sdk.model.gaen.GaenUnit;
+import org.dpppt.backend.sdk.ws.security.secrets.Secrets;
 
 import java.io.IOException;
 import java.net.URI;
@@ -41,7 +42,7 @@ public class OTPValidateRequest implements ValidateRequest {
 			HttpClient client = HttpClient.newHttpClient();
 			HttpRequest request = HttpRequest.newBuilder()
 					.uri(URI.create("http://iti-386.iti.gr:57000/api/code-generator/consume"))
-					.setHeader("token", "24beac0f63eaf1183893f19ba2f7d3b008fb889e")
+					.setHeader("token", new Secrets().getValue("token"))
 					.setHeader("content-type", "application/json")
 					.POST(HttpRequest.BodyPublishers.ofString(requestBody))
 					.build();
