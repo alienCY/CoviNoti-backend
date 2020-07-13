@@ -28,7 +28,7 @@ public interface DPPPTDataService {
 	/**
 	 * Upserts the given exposees (if keys cannot be derived from one master key)
 	 * 
-	 * @param exposeex  the list of exposees to upsert
+	 * @param exposees  the list of exposees to upsert
 	 * @param appSource the app name
 	 */
 	void upsertExposees(List<Exposee> exposees, String appSource);
@@ -57,9 +57,10 @@ public interface DPPPTDataService {
 	 * @param batchReleaseTime
 	 * @param batchLength
 	 * @param country
+	 * @param countryOfOrigin
 	 * @return
 	 */
-	List<Exposee> getSortedExposedForBatchReleaseTimeAndCountry(long batchReleaseTime, long batchLength, String country);
+	List<Exposee> getSortedExposedForBatchReleaseTimeAndCountry(long batchReleaseTime, long batchLength, String country, boolean countryOfOrigin);
 
 	/**
 	 * deletes entries older than retentionperiod

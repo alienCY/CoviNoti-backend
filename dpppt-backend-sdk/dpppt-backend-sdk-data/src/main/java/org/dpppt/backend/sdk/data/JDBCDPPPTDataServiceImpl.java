@@ -108,8 +108,13 @@ public class JDBCDPPPTDataServiceImpl implements DPPPTDataService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<Exposee> getSortedExposedForBatchReleaseTimeAndCountry(long batchReleaseTime, long batchLength, String country) {
-		String sql = "select pk_exposed_id, key, key_date, countries_of_interest from t_exposed where :country = any(countries_of_interest) and received_at >= :startBatch and received_at < :batchReleaseTime order by pk_exposed_id desc";
+	public List<Exposee> getSortedExposedForBatchReleaseTimeAndCountry(long batchReleaseTime, long batchLength, String country, boolean countryOfOrigin) {
+		String sql = new String();
+		if(countryOfOrigin == false) { //get all entries for country
+			sql = "select pk_exposed_id, key, key_date, countries_of_interest from t_exposed where :country = any(countries_of_interest) and received_at >= :startBatch and received_at < :batchReleaseTime order by pk_exposed_id desc";
+		} else { //get entries with first country - country of origin the *country*
+			sql = "select pk_exposed_id, key, key_date, countries_of_interest from t_exposed where countries_of_interest[1] = :country and received_at >= :startBatch and received_at < :batchReleaseTime order by pk_exposed_id desc";
+		}
 		MapSqlParameterSource params = new MapSqlParameterSource();
 		params.addValue("country", country);
 		params.addValue("batchReleaseTime", Date.from(Instant.ofEpochMilli(batchReleaseTime)));

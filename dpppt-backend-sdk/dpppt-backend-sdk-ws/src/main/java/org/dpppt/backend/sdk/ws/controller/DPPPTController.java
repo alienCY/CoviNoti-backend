@@ -184,7 +184,7 @@ public class DPPPTController {
 		String[] coiArray = coi.split(", ");
 		List<Exposee> exposeeListAll = new ArrayList<>();
 		for(String country : coiArray) {
-			exposeeListAll.addAll(dataService.getSortedExposedForBatchReleaseTimeAndCountry(batchReleaseTime, batchLength, country));
+			exposeeListAll.addAll(dataService.getSortedExposedForBatchReleaseTimeAndCountry(batchReleaseTime, batchLength, country, false));
 		}
 
 		List<Exposee> exposeeList = exposeeListAll.stream().filter(distinctByKey(Exposee::getKey)).collect(Collectors.toList());

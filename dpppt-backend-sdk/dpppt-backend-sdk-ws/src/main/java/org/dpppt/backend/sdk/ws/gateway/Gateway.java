@@ -77,8 +77,7 @@ public class Gateway {
     public boolean uploadNewKeys(long interval)
     {
         try{
-            //TODO: query better to get only Cypriots
-            List<Exposee> exposees = dataService.getSortedExposedForBatchReleaseTimeAndCountry(Instant.now().toEpochMilli(), interval, "CY");
+            List<Exposee> exposees = dataService.getSortedExposedForBatchReleaseTimeAndCountry(Instant.now().toEpochMilli(), interval, "CY", true);
             if(exposees.size() > 0) {
                 String json = responseParser.getJson(exposees);
                 HttpResponse<String> response = upload(json, "a", "b");
