@@ -11,12 +11,16 @@
 package org.dpppt.backend.sdk.model;
 
 import javax.validation.constraints.NotNull;
-
+import org.springframework.data.annotation.Id;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.ArrayList;
 
+@Document(collection="exposed")
 public class Exposee {
+
+	@Id
 	@JsonIgnore
 	private Integer Id;
 
