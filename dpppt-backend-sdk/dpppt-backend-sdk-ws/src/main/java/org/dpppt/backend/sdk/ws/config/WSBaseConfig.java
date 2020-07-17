@@ -46,6 +46,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.converter.protobuf.ProtobufHttpMessageConverter;
@@ -73,7 +74,7 @@ import io.jsonwebtoken.security.Keys;
 
 @Configuration
 @EnableScheduling
-public abstract class WSBaseConfig implements SchedulingConfigurer, WebMvcConfigurer {
+public abstract class WSBaseConfig extends AbstractMongoClientConfiguration implements SchedulingConfigurer, WebMvcConfigurer {
 
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
 

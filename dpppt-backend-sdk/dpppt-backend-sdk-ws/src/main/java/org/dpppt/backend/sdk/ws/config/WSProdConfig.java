@@ -17,6 +17,8 @@ import java.util.Properties;
 
 import javax.sql.DataSource;
 
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import org.dpppt.backend.sdk.data.gaen.DebugGAENDataService;
 import org.dpppt.backend.sdk.data.gaen.DebugJDBCGAENDataServiceImpl;
 import org.dpppt.backend.sdk.ws.controller.DebugController;
@@ -37,8 +39,10 @@ import org.springframework.core.env.Environment;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 @Configuration
+@EnableMongoRepositories(basePackages = "org.dpppt.backend.sdk.data")
 @PropertySource("secrets.properties") //extra source for secret keys
 @Profile("prod")
 public class WSProdConfig extends WSBaseConfig {
@@ -75,6 +79,19 @@ public class WSProdConfig extends WSBaseConfig {
 	
 	@Value("${ws.ecdsa.credentials.publicKey:}")
     public String publicKey;
+
+	@Value("${spring.data.mongodb.database:}")
+	public String databaseName;
+
+	@Override
+	public MongoClient mongoClient() {
+		return MongoClients.create();
+	}
+
+	@Override
+	protected String getDatabaseName() {
+		return databaseName;
+	}
 
 	@Bean(destroyMethod = "close")
 	public DataSource dataSource() {
