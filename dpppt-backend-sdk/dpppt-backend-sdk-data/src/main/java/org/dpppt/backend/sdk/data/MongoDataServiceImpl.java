@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.transaction.annotation.Transactional;
 
 public class MongoDataServiceImpl implements DPPPTDataService {
@@ -73,31 +72,26 @@ public class MongoDataServiceImpl implements DPPPTDataService {
     public List<Exposee> getSortedExposedForBatchReleaseTime(long batchReleaseTime, long batchLength) {
         Query query = new Query();
         query.addCriteria(
-          Criteria.where("received_at").lt(LocalDateTime.ofInstant(Instant.ofEpochMilli(batchReleaseTime), ZoneOffset.UTC))
-                .andOperator(Criteria.where("received_at").gte(LocalDateTime.from(Instant.ofEpochMilli(batchReleaseTime - batchLength))))
+          Criteria.where("received_at").lt(Date.from(Instant.ofEpochMilli(batchReleaseTime)))
+                .andOperator(Criteria.where("received_at").gte(Date.from(Instant.ofEpochMilli(batchReleaseTime - batchLength))))
         );
-        List<Exposee> list = mapper.unDoc(mongoTemplate.find(query, ExposeeDoc.class));
-        System.out.println("Synced!");
-        for(var e : list){
-            System.out.println(e.getKey());
-        }
         return mapper.unDoc(mongoTemplate.find(query, ExposeeDoc.class));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Exposee> getSortedExposedForBatchReleaseTimeAndCountry(long batchReleaseTime, long batchLength, String country, boolean countryOfOrigin) {
-        String sql = new String();
+        Query query = new Query();
+        query.addCriteria(
+                Criteria.where("received_at").lt(Date.from(Instant.ofEpochMilli(batchReleaseTime)))
+                        .andOperator(Criteria.where("received_at").gte(Date.from(Instant.ofEpochMilli(batchReleaseTime - batchLength))))
+        );
         if(countryOfOrigin == false) { //get all entries for country
-            sql = "select pk_exposed_id, key, key_date, countries_of_interest from t_exposed where :country = any(countries_of_interest) and received_at >= :startBatch and received_at < :batchReleaseTime order by pk_exposed_id desc";
+            query.addCriteria(Criteria.where("countryCodeList").is(country));
         } else { //get entries with first country - country of origin the *country*
-            sql = "select pk_exposed_id, key, key_date, countries_of_interest from t_exposed where countries_of_interest[1] = :country and received_at >= :startBatch and received_at < :batchReleaseTime order by pk_exposed_id desc";
+            query.addCriteria(Criteria.where("countryCodeList").is(country));
         }
-        MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("country", country);
-        params.addValue("batchReleaseTime", Date.from(Instant.ofEpochMilli(batchReleaseTime)));
-        params.addValue("startBatch", Date.from(Instant.ofEpochMilli(batchReleaseTime - batchLength)));
-        return jt.query(sql, params, new ExposeeRowMapper());
+        return mapper.unDoc(mongoTemplate.find(query, ExposeeDoc.class));
     }
 
     @Override

@@ -21,8 +21,13 @@ import java.util.List;
 import javax.sql.DataSource;
 
 import org.dpppt.backend.sdk.model.Exposee;
+import org.dpppt.backend.sdk.model.ExposeeDoc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,11 +38,19 @@ public class JDBCDPPPTDataServiceImpl implements DPPPTDataService {
 	private static final String PGSQL = "pgsql";
 	private final String dbType;
 	private final NamedParameterJdbcTemplate jt;
+	private ExposeeDocMapper mapper;
 
 	public JDBCDPPPTDataServiceImpl(String dbType, DataSource dataSource) {
 		this.dbType = dbType;
 		this.jt = new NamedParameterJdbcTemplate(dataSource);
+		this.mapper = new ExposeeDocMapper();
 	}
+
+	@Autowired
+	private ExposeeRepository exposeeRepository;
+
+	@Autowired
+	private MongoTemplate mongoTemplate;
 
 	@Override
 	@Transactional(readOnly = false)
@@ -57,6 +70,7 @@ public class JDBCDPPPTDataServiceImpl implements DPPPTDataService {
 		params.addValue("key_date", new Date(exposee.getKeyDate()));
 		params.addValue("countries_of_interest", exposee.getCountryCodeList().toArray(new String[0]));
 		jt.update(sql, params);
+		exposeeRepository.save(mapper.toDoc(exposee, appSource));
 	}
 	@Override
 	@Transactional(readOnly = false)
