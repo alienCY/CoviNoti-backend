@@ -28,7 +28,6 @@ public class ExposeeDocMapper {
         exposeeDoc.setAppSource(appSource);
         exposeeDoc.setKeyDate(new Date(exposee.getKeyDate()));
         exposeeDoc.setReceivedAt(new Date(System.currentTimeMillis()));
-        System.out.println(OffsetDateTime.now().toLocalDateTime());
         exposeeDoc.setCountryCodeList(exposee.getCountryCodeList());
         return exposeeDoc;
     }

@@ -21,10 +21,7 @@ import java.util.TimeZone;
 
 import javax.sql.DataSource;
 
-import org.dpppt.backend.sdk.data.DPPPTDataService;
-import org.dpppt.backend.sdk.data.JDBCDPPPTDataServiceImpl;
-import org.dpppt.backend.sdk.data.JDBCRedeemDataServiceImpl;
-import org.dpppt.backend.sdk.data.RedeemDataService;
+import org.dpppt.backend.sdk.data.*;
 import org.dpppt.backend.sdk.data.gaen.FakeKeyService;
 import org.dpppt.backend.sdk.data.gaen.GAENDataService;
 import org.dpppt.backend.sdk.data.gaen.JDBCGAENDataServiceImpl;
@@ -78,11 +75,11 @@ public abstract class WSBaseConfig extends AbstractMongoClientConfiguration impl
 
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-	public abstract DataSource dataSource();
-
+//	public abstract DataSource dataSource();
+//
 	public abstract Flyway flyway();
-
-	public abstract String getDbType();
+//
+//	public abstract String getDbType();
 
 	@Value("#{${ws.security.headers: {'X-Content-Type-Options':'nosniff', 'X-Frame-Options':'DENY','X-Xss-Protection':'1; mode=block'}}}")
 	Map<String,String> additionalHeaders;
@@ -167,31 +164,31 @@ public abstract class WSBaseConfig extends AbstractMongoClientConfiguration impl
 		return this.keyIdentifier;
 	}
 
-	@Bean
-	public FakeKeyService fakeKeyService() {
-		try {
-			DataSource fakeDataSource = new EmbeddedDatabaseBuilder().generateUniqueName(true)
-					.setType(EmbeddedDatabaseType.HSQL).build();
-			Flyway flyWay = Flyway.configure().dataSource(fakeDataSource).locations("classpath:/db/migration/hsqldb")
-					.load();
-			flyWay.migrate();
-			GAENDataService fakeGaenService = new JDBCGAENDataServiceImpl("hsql", fakeDataSource,Duration.ofMillis(batchLength));
-			return new FakeKeyService(fakeGaenService, Integer.valueOf(randomkeyamount),
-					Integer.valueOf(gaenKeySizeBytes), Duration.ofDays(retentionDays), randomkeysenabled);
-		} catch (Exception ex) {
-			throw new RuntimeException("FakeKeyService could not be instantiated", ex);
-		}
-	}
-
-	@Bean
-	public ProtoSignature gaenSigner() {
-		try {
-			return new ProtoSignature(gaenAlgorithm, keyVault.get("gaen"), getBundleId(), getPackageName(),
-					getKeyVersion(), getKeyIdentifier(), gaenRegion, Duration.ofMillis(batchLength));
-		} catch (Exception ex) {
-			throw new RuntimeException("Cannot initialize signer for protobuf");
-		}
-	}
+//	@Bean
+//	public FakeKeyService fakeKeyService() {
+//		try {
+//			DataSource fakeDataSource = new EmbeddedDatabaseBuilder().generateUniqueName(true)
+//					.setType(EmbeddedDatabaseType.HSQL).build();
+//			Flyway flyWay = Flyway.configure().dataSource(fakeDataSource).locations("classpath:/db/migration/hsqldb")
+//					.load();
+//			flyWay.migrate();
+//			GAENDataService fakeGaenService = new JDBCGAENDataServiceImpl("hsql", fakeDataSource,Duration.ofMillis(batchLength));
+//			return new FakeKeyService(fakeGaenService, Integer.valueOf(randomkeyamount),
+//					Integer.valueOf(gaenKeySizeBytes), Duration.ofDays(retentionDays), randomkeysenabled);
+//		} catch (Exception ex) {
+//			throw new RuntimeException("FakeKeyService could not be instantiated", ex);
+//		}
+//	}
+//
+//	@Bean
+//	public ProtoSignature gaenSigner() {
+//		try {
+//			return new ProtoSignature(gaenAlgorithm, keyVault.get("gaen"), getBundleId(), getPackageName(),
+//					getKeyVersion(), getKeyIdentifier(), gaenRegion, Duration.ofMillis(batchLength));
+//		} catch (Exception ex) {
+//			throw new RuntimeException("Cannot initialize signer for protobuf");
+//		}
+//	}
 
 	@Bean
 	public DPPPTController dppptSDKController() {
@@ -210,16 +207,16 @@ public abstract class WSBaseConfig extends AbstractMongoClientConfiguration impl
 		return new ValidationUtils(gaenKeySizeBytes, Duration.ofDays(retentionDays), batchLength);
 	}
 
-	@Bean
-	public GaenController gaenController() {
-		ValidateRequest theValidator = gaenRequestValidator;
-		if (theValidator == null) {
-			theValidator = backupValidator();
-		}
-		return new GaenController(gaenDataService(), fakeKeyService(), theValidator, gaenSigner(),
-				gaenValidationUtils(), Duration.ofMillis(batchLength), Duration.ofMillis(requestTime),
-				Duration.ofMillis(exposedListCacheControl), keyVault.get("nextDayJWT").getPrivate());
-	}
+//	@Bean
+//	public GaenController gaenController() {
+//		ValidateRequest theValidator = gaenRequestValidator;
+//		if (theValidator == null) {
+//			theValidator = backupValidator();
+//		}
+//		return new GaenController(gaenDataService(), fakeKeyService(), theValidator, gaenSigner(),
+//				gaenValidationUtils(), Duration.ofMillis(batchLength), Duration.ofMillis(requestTime),
+//				Duration.ofMillis(exposedListCacheControl), keyVault.get("nextDayJWT").getPrivate());
+//	}
 
 	@Bean
 	ValidateRequest backupValidator() {
@@ -228,18 +225,18 @@ public abstract class WSBaseConfig extends AbstractMongoClientConfiguration impl
 
 	@Bean
 	public DPPPTDataService dppptSDKDataService() {
-		return new JDBCDPPPTDataServiceImpl(getDbType(), dataSource());
+		return new MongoDataServiceImpl();
 	}
 
-	@Bean
-	public GAENDataService gaenDataService() {
-		return new JDBCGAENDataServiceImpl(getDbType(), dataSource(), Duration.ofMillis(batchLength));
-	}
-
-	@Bean
-	public RedeemDataService redeemDataService() {
-		return new JDBCRedeemDataServiceImpl(dataSource());
-	}
+//	@Bean
+//	public GAENDataService gaenDataService() {
+//		return new JDBCGAENDataServiceImpl(getDbType(), dataSource(), Duration.ofMillis(batchLength));
+//	}
+//
+//	@Bean
+//	public RedeemDataService redeemDataService() {
+//		return new JDBCRedeemDataServiceImpl(dataSource());
+//	}
 
 	@Bean
 	public MappingJackson2HttpMessageConverter converter() {
@@ -289,8 +286,8 @@ public abstract class WSBaseConfig extends AbstractMongoClientConfiguration impl
 		taskRegistrar.addFixedRateTask(new IntervalTask(() -> {
 			logger.info("Start DB cleanup");
 			dppptSDKDataService().cleanDB(Duration.ofDays(retentionDays));
-			gaenDataService().cleanDB(Duration.ofDays(retentionDays));
-			redeemDataService().cleanDB(Duration.ofDays(2));
+//			gaenDataService().cleanDB(Duration.ofDays(retentionDays));
+//			redeemDataService().cleanDB(Duration.ofDays(2));
 			logger.info("DB cleanup up");
 		}, 60 * 60 * 1000L));
 
@@ -304,8 +301,8 @@ public abstract class WSBaseConfig extends AbstractMongoClientConfiguration impl
 			dppptSDKController().federationGateway.uploadNewKeys(uploadInterval);
 		}, uploadInterval));
 
-		var trigger = new CronTrigger("0 0 2 * * *", TimeZone.getTimeZone(ZoneOffset.UTC));
-		taskRegistrar.addCronTask(new CronTask(() -> fakeKeyService().updateFakeKeys(), trigger));
+//		var trigger = new CronTrigger("0 0 2 * * *", TimeZone.getTimeZone(ZoneOffset.UTC));
+//		taskRegistrar.addCronTask(new CronTask(() -> fakeKeyService().updateFakeKeys(), trigger));
 	}
 
 	@Override

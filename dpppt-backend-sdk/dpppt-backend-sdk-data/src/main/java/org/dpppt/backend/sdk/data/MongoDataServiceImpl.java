@@ -39,7 +39,7 @@ public class MongoDataServiceImpl implements DPPPTDataService {
 
     private ExposeeDocMapper mapper;
 
-    public MongoDataServiceImpl(DataSource dataSource) {
+    public MongoDataServiceImpl() {
         this.mapper = new ExposeeDocMapper();
     }
 
@@ -88,7 +88,7 @@ public class MongoDataServiceImpl implements DPPPTDataService {
         );
         if(countryOfOrigin == false) { //get all entries for country
             query.addCriteria(Criteria.where("countryCodeList").is(country));
-        } else { //get entries with first country - country of origin the *country*
+        } else { //TODO: get entries with first country - country of origin the *country*
             query.addCriteria(Criteria.where("countryCodeList").is(country));
         }
         return mapper.unDoc(mongoTemplate.find(query, ExposeeDoc.class));
