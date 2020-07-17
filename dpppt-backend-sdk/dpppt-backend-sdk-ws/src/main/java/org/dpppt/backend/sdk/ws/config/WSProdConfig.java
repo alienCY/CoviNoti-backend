@@ -86,6 +86,7 @@ public class WSProdConfig extends WSBaseConfig {
 		return databaseName;
 	}
 
+//just keeping for reference - no longer needed
 //	@Bean(destroyMethod = "close")
 //	public DataSource dataSource() {
 //		HikariConfig config = new HikariConfig();

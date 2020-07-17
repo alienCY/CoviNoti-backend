@@ -88,8 +88,8 @@ public class MongoDataServiceImpl implements DPPPTDataService {
         );
         if(countryOfOrigin == false) { //get all entries for country
             query.addCriteria(Criteria.where("countryCodeList").is(country));
-        } else { //TODO: get entries with first country - country of origin the *country*
-            query.addCriteria(Criteria.where("countryCodeList").is(country));
+        } else { //get entries with first element the country (origin)
+            query.addCriteria(Criteria.where("countryCodeList.0").is(country));
         }
         return mapper.unDoc(mongoTemplate.find(query, ExposeeDoc.class));
     }
