@@ -17,8 +17,11 @@ import java.util.Properties;
 
 import javax.sql.DataSource;
 
+import com.mongodb.MongoClientSettings;
+import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import com.mongodb.connection.ClusterSettings;
 import org.dpppt.backend.sdk.data.gaen.DebugGAENDataService;
 import org.dpppt.backend.sdk.data.gaen.DebugJDBCGAENDataServiceImpl;
 import org.dpppt.backend.sdk.ws.controller.DebugController;
@@ -41,38 +44,13 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
+import static java.util.Arrays.asList;
+
 @Configuration
 @EnableMongoRepositories(basePackages = "org.dpppt.backend.sdk.data")
 @PropertySource("secrets.properties") //extra source for secret keys
 @Profile("prod")
 public class WSProdConfig extends WSBaseConfig {
-
-//	@Value("${datasource.username}")
-//	String dataSourceUser;
-//
-//	@Value("${datasource.password}")
-//	String dataSourcePassword;
-//
-//	@Value("${datasource.url}")
-//	String dataSourceUrl;
-//
-//	@Value("${datasource.driverClassName}")
-//	String dataSourceDriver;
-//
-//	@Value("${datasource.failFast}")
-//	String dataSourceFailFast;
-//
-//	@Value("${datasource.maximumPoolSize}")
-//	String dataSourceMaximumPoolSize;
-//
-//	@Value("${datasource.maxLifetime}")
-//	String dataSourceMaxLifetime;
-//
-//	@Value("${datasource.idleTimeout}")
-//	String dataSourceIdleTimeout;
-//
-//	@Value("${datasource.connectionTimeout}")
-//	String dataSourceConnectionTimeout;
 
 	@Value("${ws.ecdsa.credentials.privateKey:}")
 	private String privateKey;
@@ -83,9 +61,24 @@ public class WSProdConfig extends WSBaseConfig {
 	@Value("${spring.data.mongodb.database:}")
 	public String databaseName;
 
+	@Value("${spring.data.mongodb.host:}")
+	public String mongoHost;
+
+	@Value("${spring.data.mongodb.port:}")
+	public int mongoPort;
+
 	@Override
 	public MongoClient mongoClient() {
-		return MongoClients.create();
+		return MongoClients.create(
+			MongoClientSettings.builder()
+					.applyToClusterSettings(builder ->
+							builder
+								.hosts(asList(
+									new ServerAddress(mongoHost, mongoPort)))
+								.build()
+					)
+					.build()
+		);
 	}
 
 	@Override
@@ -115,11 +108,6 @@ public class WSProdConfig extends WSBaseConfig {
 		Flyway flyWay = Flyway.configure().load();
 		return flyWay;
 	}
-//
-//	@Override
-//	public String getDbType() {
-//		return "pgsql";
-//	}
 
 	@Bean
 	KeyVault keyVault() {
@@ -176,10 +164,10 @@ public class WSProdConfig extends WSBaseConfig {
 		Environment env;
 
 		protected boolean isProd() {
-			return Arrays.asList(env.getActiveProfiles()).contains("prod");
+			return asList(env.getActiveProfiles()).contains("prod");
 		}
 		protected boolean isDev() {
-			return Arrays.asList(env.getActiveProfiles()).contains("dev");
+			return asList(env.getActiveProfiles()).contains("dev");
 		}
 
 		@Bean

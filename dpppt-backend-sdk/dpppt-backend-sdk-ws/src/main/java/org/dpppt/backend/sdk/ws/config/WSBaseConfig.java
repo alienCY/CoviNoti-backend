@@ -47,8 +47,6 @@ import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.converter.protobuf.ProtobufHttpMessageConverter;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -75,11 +73,7 @@ public abstract class WSBaseConfig extends AbstractMongoClientConfiguration impl
 
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-//	public abstract DataSource dataSource();
-//
 	public abstract Flyway flyway();
-//
-//	public abstract String getDbType();
 
 	@Value("#{${ws.security.headers: {'X-Content-Type-Options':'nosniff', 'X-Frame-Options':'DENY','X-Xss-Protection':'1; mode=block'}}}")
 	Map<String,String> additionalHeaders;
@@ -167,11 +161,6 @@ public abstract class WSBaseConfig extends AbstractMongoClientConfiguration impl
 //	@Bean
 //	public FakeKeyService fakeKeyService() {
 //		try {
-//			DataSource fakeDataSource = new EmbeddedDatabaseBuilder().generateUniqueName(true)
-//					.setType(EmbeddedDatabaseType.HSQL).build();
-//			Flyway flyWay = Flyway.configure().dataSource(fakeDataSource).locations("classpath:/db/migration/hsqldb")
-//					.load();
-//			flyWay.migrate();
 //			GAENDataService fakeGaenService = new JDBCGAENDataServiceImpl("hsql", fakeDataSource,Duration.ofMillis(batchLength));
 //			return new FakeKeyService(fakeGaenService, Integer.valueOf(randomkeyamount),
 //					Integer.valueOf(gaenKeySizeBytes), Duration.ofDays(retentionDays), randomkeysenabled);
@@ -179,16 +168,16 @@ public abstract class WSBaseConfig extends AbstractMongoClientConfiguration impl
 //			throw new RuntimeException("FakeKeyService could not be instantiated", ex);
 //		}
 //	}
-//
-//	@Bean
-//	public ProtoSignature gaenSigner() {
-//		try {
-//			return new ProtoSignature(gaenAlgorithm, keyVault.get("gaen"), getBundleId(), getPackageName(),
-//					getKeyVersion(), getKeyIdentifier(), gaenRegion, Duration.ofMillis(batchLength));
-//		} catch (Exception ex) {
-//			throw new RuntimeException("Cannot initialize signer for protobuf");
-//		}
-//	}
+
+	@Bean
+	public ProtoSignature gaenSigner() {
+		try {
+			return new ProtoSignature(gaenAlgorithm, keyVault.get("gaen"), getBundleId(), getPackageName(),
+					getKeyVersion(), getKeyIdentifier(), gaenRegion, Duration.ofMillis(batchLength));
+		} catch (Exception ex) {
+			throw new RuntimeException("Cannot initialize signer for protobuf");
+		}
+	}
 
 	@Bean
 	public DPPPTController dppptSDKController() {
