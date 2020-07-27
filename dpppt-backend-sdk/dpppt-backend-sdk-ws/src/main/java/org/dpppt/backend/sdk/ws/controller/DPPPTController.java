@@ -182,9 +182,9 @@ public class DPPPTController {
 		}
 
 		String[] coiArray = coi.split(", ");
-		List<Exposee> exposeeListAll = new ArrayList<>();
+		List<Exposee> exposeeListAll = dataService.getLocalExposedForBatchReleaseTime(batchReleaseTime, batchLength);
 		for(String country : coiArray) {
-			exposeeListAll.addAll(dataService.getSortedExposedForBatchReleaseTimeAndCountry(batchReleaseTime, batchLength, country, false));
+			exposeeListAll.addAll(dataService.getExposedForBatchReleaseTimeAndCountry(batchReleaseTime, batchLength, country));
 		}
 
 		List<Exposee> exposeeList = exposeeListAll.stream().filter(distinctByKey(Exposee::getKey)).collect(Collectors.toList());
@@ -233,9 +233,14 @@ public class DPPPTController {
 			@RequestParam(value = "batchTag") String batchTag,
 			@RequestParam(value = "date") String date)
 	{
-		federationGateway.addToBeDownloaded(date,batchTag);
-		federationGateway.downloadNewKeys(date);
-		return ResponseEntity.ok().build();
+		try {
+			federationGateway.addToBeDownloaded(date,batchTag);
+			federationGateway.downloadNewKeys(date);
+			return ResponseEntity.ok().build();
+		} catch(Exception e) {
+			System.out.println(e);
+			return ResponseEntity.status(500).build();
+		}
 	}
 
 }

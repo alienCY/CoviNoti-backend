@@ -15,8 +15,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import javax.sql.DataSource;
-
 import org.dpppt.backend.sdk.model.Exposee;
 import org.dpppt.backend.sdk.model.ExposeeDoc;
 import org.slf4j.Logger;
@@ -34,9 +32,6 @@ public class MongoDataServiceImpl implements DPPPTDataService {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    @Autowired
-    private ExposeeRepository exposeeRepository;
-
     private ExposeeDocMapper mapper;
 
     public MongoDataServiceImpl() {
@@ -46,17 +41,16 @@ public class MongoDataServiceImpl implements DPPPTDataService {
     @Override
     @Transactional(readOnly = false)
     public void upsertExposee(Exposee exposee, String appSource) {
-        exposeeRepository.save(mapper.toDoc(exposee, appSource));
+        if(exposee.getCountryCodeList().indexOf("CY") == 0)
+            mongoTemplate.save(mapper.toDoc(exposee, appSource), "local");
     }
 
     @Override
     @Transactional(readOnly = false)
     public void upsertExposees(List<Exposee> exposees, String appSource) {
-        List<ExposeeDoc> exposeeDocs = new ArrayList<>();
         for(var exposee : exposees) {
-            exposeeDocs.add(mapper.toDoc(exposee, appSource));
+            mongoTemplate.save(mapper.toDoc(exposee, appSource),"global");
         }
-        exposeeRepository.saveAll(exposeeDocs);
     }
 
     //UNUSED
@@ -78,7 +72,7 @@ public class MongoDataServiceImpl implements DPPPTDataService {
         return mapper.unDoc(mongoTemplate.find(query, ExposeeDoc.class));
     }
 
-    @Override
+    //@Override
     @Transactional(readOnly = true)
     public List<Exposee> getSortedExposedForBatchReleaseTimeAndCountry(long batchReleaseTime, long batchLength, String country, boolean countryOfOrigin) {
         Query query = new Query();
@@ -92,6 +86,32 @@ public class MongoDataServiceImpl implements DPPPTDataService {
             query.addCriteria(Criteria.where("countryCodeList.0").is(country));
         }
         return mapper.unDoc(mongoTemplate.find(query, ExposeeDoc.class));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Exposee> getExposedForBatchReleaseTimeAndCountry(long batchReleaseTime, long batchLength, String country) {
+        Query query = new Query();
+        query.addCriteria(
+                Criteria.where("received_at").lt(Date.from(Instant.ofEpochMilli(batchReleaseTime)))
+                        .andOperator(Criteria.where("received_at").gte(Date.from(Instant.ofEpochMilli(batchReleaseTime - batchLength))))
+        );
+        query.addCriteria(
+                Criteria.where("countryCodeList").is(country)
+        );
+
+        return mapper.unDoc(mongoTemplate.find(query, ExposeeDoc.class, "global"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Exposee> getLocalExposedForBatchReleaseTime(long batchReleaseTime, long batchLength) {
+        Query query = new Query();
+        query.addCriteria(
+                Criteria.where("received_at").lt(Date.from(Instant.ofEpochMilli(batchReleaseTime)))
+                        .andOperator(Criteria.where("received_at").gte(Date.from(Instant.ofEpochMilli(batchReleaseTime - batchLength))))
+        );
+        return mapper.unDoc(mongoTemplate.find(query, ExposeeDoc.class, "local"));
     }
 
     @Override

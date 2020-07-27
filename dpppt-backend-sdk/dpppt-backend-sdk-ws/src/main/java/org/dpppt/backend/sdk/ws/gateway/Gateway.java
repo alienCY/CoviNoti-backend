@@ -77,7 +77,7 @@ public class Gateway {
     public boolean uploadNewKeys(long interval)
     {
         try{
-            List<Exposee> exposees = dataService.getSortedExposedForBatchReleaseTimeAndCountry(Instant.now().toEpochMilli(), interval, "CY", true);
+            List<Exposee> exposees = dataService.getLocalExposedForBatchReleaseTime(Instant.now().toEpochMilli(), interval);
             if(exposees.size() > 0) {
                 String json = responseParser.getJson(exposees);
                 HttpResponse<String> response = upload(json, "a", "b");

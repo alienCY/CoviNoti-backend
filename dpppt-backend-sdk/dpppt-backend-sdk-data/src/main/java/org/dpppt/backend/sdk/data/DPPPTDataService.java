@@ -57,10 +57,18 @@ public interface DPPPTDataService {
 	 * @param batchReleaseTime
 	 * @param batchLength
 	 * @param country
-	 * @param countryOfOrigin
 	 * @return
 	 */
-	List<Exposee> getSortedExposedForBatchReleaseTimeAndCountry(long batchReleaseTime, long batchLength, String country, boolean countryOfOrigin);
+	List<Exposee> getExposedForBatchReleaseTimeAndCountry(long batchReleaseTime, long batchLength, String country);
+
+	/**
+	 * Returns all exposees from Cyprus.
+	 *
+	 * @param batchReleaseTime
+	 * @param batchLength
+	 * @return
+	 */
+	List<Exposee> getLocalExposedForBatchReleaseTime(long batchReleaseTime, long batchLength);
 
 	/**
 	 * deletes entries older than retentionperiod
