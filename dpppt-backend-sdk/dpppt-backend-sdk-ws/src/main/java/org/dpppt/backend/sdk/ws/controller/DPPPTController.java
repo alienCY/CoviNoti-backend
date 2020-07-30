@@ -26,7 +26,6 @@ import javax.validation.Valid;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.dpppt.backend.sdk.data.DPPPTDataService;
 import org.dpppt.backend.sdk.model.BucketList;
-import org.dpppt.backend.sdk.model.ExposedOverview;
 import org.dpppt.backend.sdk.model.Exposee;
 import org.dpppt.backend.sdk.model.ExposeeRequest;
 import org.dpppt.backend.sdk.model.ExposeeRequestList;
@@ -139,7 +138,7 @@ public class DPPPTController {
 		}
 
 		if (!this.validateRequest.isFakeRequest(principal, exposeeRequests)) {
-			dataService.upsertExposees(exposees, appSource);
+			dataService.upsertExposees(exposees, appSource, "local");
 		}
 
 		long after = System.currentTimeMillis();
@@ -150,21 +149,6 @@ public class DPPPTController {
 
 		}
 		return ResponseEntity.ok().build();
-	}
-
-	@CrossOrigin(origins = { "https://editor.swagger.io" })
-	@GetMapping(value = "/exposedjson/{batchReleaseTime}", produces = "application/json")
-	public @ResponseBody ResponseEntity<ExposedOverview> getExposedByDayDate(@PathVariable long batchReleaseTime,
-			WebRequest request) throws BadBatchReleaseTimeException{
-		if(!validationUtils.isValidBatchReleaseTime(batchReleaseTime)) {
-			return ResponseEntity.notFound().build();
-		}
-
-		List<Exposee> exposeeList = dataService.getSortedExposedForBatchReleaseTime(batchReleaseTime, batchLength);
-		ExposedOverview overview = new ExposedOverview(exposeeList);
-		overview.setBatchReleaseTime(batchReleaseTime);
-		return ResponseEntity.ok().cacheControl(CacheControl.maxAge(Duration.ofMinutes(exposedListCacheControl)))
-				.header("X-BATCH-RELEASE-TIME", Long.toString(batchReleaseTime)).body(overview);
 	}
 
 	//Helper function to remove duplicate keys from returns
@@ -182,12 +166,12 @@ public class DPPPTController {
 		}
 
 		String[] coiArray = coi.split(", ");
-		List<Exposee> exposeeListAll = dataService.getLocalExposedForBatchReleaseTime(batchReleaseTime, batchLength);
+		List<Exposee> exposeeList = dataService.getLocalExposedForBatchReleaseTime(batchReleaseTime, batchLength);
 		for(String country : coiArray) {
-			exposeeListAll.addAll(dataService.getExposedForBatchReleaseTimeAndCountry(batchReleaseTime, batchLength, country));
+			exposeeList.addAll(dataService.getExposedForBatchReleaseTimeAndCountry(batchReleaseTime, batchLength, country));
 		}
 
-		List<Exposee> exposeeList = exposeeListAll.stream().filter(distinctByKey(Exposee::getKey)).collect(Collectors.toList());
+		exposeeList = exposeeList.stream().filter(distinctByKey(Exposee::getKey)).collect(Collectors.toList());
 
 		List<Exposed.ProtoExposee> exposees = new ArrayList<>();
 		for (Exposee exposee : exposeeList) {
@@ -234,7 +218,7 @@ public class DPPPTController {
 			@RequestParam(value = "date") String date)
 	{
 		try {
-			federationGateway.addToBeDownloaded(date,batchTag);
+			//federationGateway.addToBeDownloaded(date,batchTag);
 			federationGateway.downloadNewKeys(date);
 			return ResponseEntity.ok().build();
 		} catch(Exception e) {

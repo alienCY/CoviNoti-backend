@@ -217,10 +217,10 @@ public abstract class WSBaseConfig extends AbstractMongoClientConfiguration impl
 		return new MongoDataServiceImpl();
 	}
 
-//	@Bean
-//	public GAENDataService gaenDataService() {
-//		return new JDBCGAENDataServiceImpl(getDbType(), dataSource(), Duration.ofMillis(batchLength));
-//	}
+	@Bean
+	public GAENDataService gaenDataService() {
+		return new JDBCGAENDataServiceImpl(Duration.ofMillis(batchLength));
+	}
 //
 //	@Bean
 //	public RedeemDataService redeemDataService() {

@@ -13,6 +13,7 @@ package org.dpppt.backend.sdk.data.gaen;
 import java.time.Duration;
 import java.util.List;
 
+import org.dpppt.backend.sdk.model.Exposee;
 import org.dpppt.backend.sdk.model.gaen.GaenKey;
 
 public interface GAENDataService {
@@ -20,24 +21,16 @@ public interface GAENDataService {
 	/**
 	 * Upserts the given list of exposed keys
 	 * 
-	 * @param key the list of exposed keys to upsert
+	 * @param keys the list of exposed keys to upsert
+	 * @param appSource application source name
+	 * @param collectionName name of collection
 	 */
-	void upsertExposees(List<GaenKey> keys);
-
-	/**
-	 * Returns the maximum id of the stored exposed entries for the given batch.
-	 * 
-	 * @param batchReleaseTime
-	 * @param publishedAfter
-	 * @param publishedUntil
-	 * @return
-	 */
-	int getMaxExposedIdForKeyDate(Long keyDate, Long publishedAfter, Long publishedUntil);
+	void upsertExposees(List<GaenKey> keys, String appSource, String collectionName);
 
 	/**
 	 * Returns all exposeed keys for the given batch.
 	 * 
-	 * @param batchReleaseTime
+	 * @param keyDate
 	 * @param publishedAfter
 	 * @param publishedUntil
 	 * @return
@@ -45,8 +38,29 @@ public interface GAENDataService {
 	List<GaenKey> getSortedExposedForKeyDate(Long keyDate, Long publishedAfter, Long publishedUntil);
 
 	/**
+	 * Returns all exposees for the given rolling period and country.
+	 *
+	 * @param keyDate
+	 * @param publishedAfter
+	 * @param publishedUntil
+	 * @param country
+	 * @return
+	 */
+	List<GaenKey> getExposedForKeyDateAndCountry(Long keyDate, Long publishedAfter, Long publishedUntil, String country);
+
+	/**
+	 * Returns all exposees from Cyprus.
+	 *
+	 * @param keyDate
+	 * @param publishedAfter
+	 * @param publishedUntil
+	 * @return
+	 */
+	List<GaenKey> getLocalExposedForKeyDate(Long keyDate, Long publishedAfter, Long publishedUntil);
+
+	/**
 	 * deletes entries older than retentionperiod
-	 * 
+	 *
 	 * @param retentionPeriod
 	 */
 	void cleanDB(Duration retentionPeriod);

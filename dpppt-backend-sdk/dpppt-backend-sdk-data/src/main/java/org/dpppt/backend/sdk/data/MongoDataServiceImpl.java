@@ -43,49 +43,16 @@ public class MongoDataServiceImpl implements DPPPTDataService {
     public void upsertExposee(Exposee exposee, String appSource) {
         if(exposee.getCountryCodeList().indexOf("CY") == 0)
             mongoTemplate.save(mapper.toDoc(exposee, appSource), "local");
+        else
+            mongoTemplate.save(mapper.toDoc(exposee, appSource), "global");
     }
 
     @Override
     @Transactional(readOnly = false)
-    public void upsertExposees(List<Exposee> exposees, String appSource) {
+    public void upsertExposees(List<Exposee> exposees, String appSource, String collectionName) {
         for(var exposee : exposees) {
-            mongoTemplate.save(mapper.toDoc(exposee, appSource),"global");
+            mongoTemplate.save(mapper.toDoc(exposee, appSource), collectionName);
         }
-    }
-
-    //UNUSED
-    @Override
-    @Transactional(readOnly = true)
-    public int getMaxExposedIdForBatchReleaseTime(long batchReleaseTime, long batchLength) {
-       return 0;
-    }
-
-    //DEPRECATED
-    @Override
-    @Transactional(readOnly = true)
-    public List<Exposee> getSortedExposedForBatchReleaseTime(long batchReleaseTime, long batchLength) {
-        Query query = new Query();
-        query.addCriteria(
-          Criteria.where("received_at").lt(Date.from(Instant.ofEpochMilli(batchReleaseTime)))
-                .andOperator(Criteria.where("received_at").gte(Date.from(Instant.ofEpochMilli(batchReleaseTime - batchLength))))
-        );
-        return mapper.unDoc(mongoTemplate.find(query, ExposeeDoc.class));
-    }
-
-    //@Override
-    @Transactional(readOnly = true)
-    public List<Exposee> getSortedExposedForBatchReleaseTimeAndCountry(long batchReleaseTime, long batchLength, String country, boolean countryOfOrigin) {
-        Query query = new Query();
-        query.addCriteria(
-                Criteria.where("received_at").lt(Date.from(Instant.ofEpochMilli(batchReleaseTime)))
-                        .andOperator(Criteria.where("received_at").gte(Date.from(Instant.ofEpochMilli(batchReleaseTime - batchLength))))
-        );
-        if(countryOfOrigin == false) { //get all entries for country
-            query.addCriteria(Criteria.where("countryCodeList").is(country));
-        } else { //get entries with first element the country (origin)
-            query.addCriteria(Criteria.where("countryCodeList.0").is(country));
-        }
-        return mapper.unDoc(mongoTemplate.find(query, ExposeeDoc.class));
     }
 
     @Override

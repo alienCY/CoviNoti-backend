@@ -30,26 +30,9 @@ public interface DPPPTDataService {
 	 * 
 	 * @param exposees  the list of exposees to upsert
 	 * @param appSource the app name
+	 * @param collectionName the collection name
 	 */
-	void upsertExposees(List<Exposee> exposees, String appSource);
-
-	/**
-	 * Returns the maximum id of the stored exposed entries fo the given batch.
-	 * 
-	 * @param batchReleaseTime
-	 * @param batchLength
-	 * @return
-	 */
-	int getMaxExposedIdForBatchReleaseTime(long batchReleaseTime, long batchLength);
-
-	/**
-	 * Returns all exposees for the given batch.
-	 * 
-	 * @param batchReleaseTime
-	 * @param batchLength
-	 * @return
-	 */
-	List<Exposee> getSortedExposedForBatchReleaseTime(long batchReleaseTime, long batchLength);
+	void upsertExposees(List<Exposee> exposees, String appSource, String collectionName);
 
 	/**
 	 * Returns all exposees for the given batch and country.

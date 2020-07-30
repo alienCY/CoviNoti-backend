@@ -11,9 +11,7 @@
 package org.dpppt.backend.sdk.ws.config;
 
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.Base64;
-import java.util.Properties;
 
 import javax.sql.DataSource;
 
@@ -21,9 +19,6 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import org.dpppt.backend.sdk.data.gaen.DebugGAENDataService;
-import org.dpppt.backend.sdk.data.gaen.DebugJDBCGAENDataServiceImpl;
-import org.dpppt.backend.sdk.ws.controller.DebugController;
 import org.dpppt.backend.sdk.ws.security.KeyVault;
 import org.dpppt.backend.sdk.ws.security.KeyVault.PrivateKeyNoSuitableEncodingFoundException;
 import org.dpppt.backend.sdk.ws.security.KeyVault.PublicKeyNoSuitableEncodingFoundException;
@@ -136,51 +131,6 @@ public class WSProdConfig extends WSBaseConfig {
 
     String getPublicKey() {
         return new String(Base64.getDecoder().decode(publicKey));
-	}
-
-	@Profile("debug")
-	@Configuration
-	public static class DebugConfig {
-		@Value("${ws.exposedlist.debug.batchlength: 86400000}")
-		long batchLength;
-
-		@Value("${ws.exposedlist.debug.requestTime: 1500}")
-		long requestTime;
-
-		@Autowired
-		KeyVault keyVault;
-		@Autowired
-		DataSource dataSource;
-		@Autowired
-		ProtoSignature gaenSigner;
-		@Autowired
-		ValidateRequest backupValidator;
-		@Autowired
-		ValidationUtils gaenValidationUtils;
-		@Autowired
-		Environment env;
-
-		protected boolean isProd() {
-			return asList(env.getActiveProfiles()).contains("prod");
-		}
-		protected boolean isDev() {
-			return asList(env.getActiveProfiles()).contains("dev");
-		}
-
-		@Bean
-			DebugGAENDataService dataService() {
-				String dbType = "";
-				if(isProd()) {
-					dbType = "pgsql";
-				} else if(isDev()) {
-					dbType = "hsqldb";
-				}
-			return new DebugJDBCGAENDataServiceImpl(dbType, dataSource);
-		}
-		@Bean
-		DebugController debugController() {
-			return new DebugController(dataService(),gaenSigner,backupValidator, gaenValidationUtils,Duration.ofMillis(batchLength), Duration.ofMillis(requestTime));
-		}
 	}
 
 }

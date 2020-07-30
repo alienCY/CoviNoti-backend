@@ -23,17 +23,19 @@ public class FakeKeyService {
 	private final Integer keySize;
 	private final Duration retentionPeriod;
 	private final boolean isEnabled;
+	private final String appSource;
 
 	private static final Logger logger = LoggerFactory.getLogger(FakeKeyService.class);
 
 	public FakeKeyService(GAENDataService dataService, Integer minNumOfKeys, Integer keySize, Duration retentionPeriod,
-			boolean isEnabled) throws NoSuchAlgorithmException {
+			boolean isEnabled, String appSource) throws NoSuchAlgorithmException {
 		this.dataService = dataService;
 		this.minNumOfKeys = minNumOfKeys;
 		this.random = new SecureRandom();
 		this.keySize = keySize;
 		this.retentionPeriod = retentionPeriod;
 		this.isEnabled = isEnabled;
+		this.appSource = appSource;
 		this.updateFakeKeys();
 	}
 
@@ -52,7 +54,7 @@ public class FakeKeyService {
 				var key = new GaenKey(Base64.getEncoder().encodeToString(keyData), keyGAENTime, 144, 0);
 				keys.add(key);
 			}
-			this.dataService.upsertExposees(keys);
+			this.dataService.upsertExposees(keys, appSource, "local");
 			tmpDate = tmpDate.plusDays(1);
 		} while (tmpDate.isBefore(currentKeyDate.plusDays(1)));
 	}

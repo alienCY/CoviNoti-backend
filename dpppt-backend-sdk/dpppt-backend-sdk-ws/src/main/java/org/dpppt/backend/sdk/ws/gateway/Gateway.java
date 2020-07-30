@@ -1,5 +1,6 @@
 package org.dpppt.backend.sdk.ws.gateway;
 
+import org.dpppt.backend.sdk.data.gaen.GAENDataService;
 import org.dpppt.backend.sdk.model.Exposee;
 import org.dpppt.backend.sdk.data.DPPPTDataService;
 import org.dpppt.backend.sdk.ws.security.secrets.Secrets;
@@ -13,12 +14,22 @@ import java.util.*;
 
 public class Gateway {
 
-    private final DPPPTDataService dataService;
+    private DPPPTDataService dataService;
+//    private GAENDataService dataService;
     private final String appSource;
     private Secrets secrets;
     private Map<String, String> lastBatchTagMap;
     private Map<String, Set<String>> toBeDownloaded;
     private final ResponseParser responseParser;
+
+//    public Gateway(GAENDataService dataService, String appSource) {
+//        this.dataService = dataService;
+//        this.appSource = appSource;
+//        this.secrets = new Secrets();
+//        this.lastBatchTagMap = new HashMap<>();
+//        this.toBeDownloaded = new HashMap<>();
+//        this.responseParser = new ResponseParser();
+//    }
 
     public Gateway(DPPPTDataService dataService, String appSource) {
         this.dataService = dataService;
@@ -41,7 +52,7 @@ public class Gateway {
         try {
             HttpResponse<String> response = download(date, lastBatchTagMap.get(date));
             List<Exposee> exposees = responseParser.getExposeeList(response.body());
-            dataService.upsertExposees(exposees, appSource);
+            dataService.upsertExposees(exposees, appSource, "global");
             lastBatchTagMap.put(date, response.headers().map().get("batchTag").get(0));
             //Console output
             System.out.println("Download Response:");

@@ -1,15 +1,24 @@
 package org.dpppt.backend.sdk.model.gaen;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.ArrayList;
+import java.util.Date;
 
-public class GaenKey {
-    public final static Integer GaenKeyDefaultRollingPeriod = 144;
+@Document
+public class GaenKeyDoc {
+
+    @Id
+    @JsonIgnore
+    private String Id;
 
     @NotNull
     @Size(min = 24, max = 24)
-    String keyData;
+    String key;
 
     @NotNull
     Integer rollingStartNumber;
@@ -21,26 +30,22 @@ public class GaenKey {
     Integer transmissionRiskLevel;
 
     @NotNull
+    String appSource;
+
+    @NotNull
     private ArrayList<String> countryCodeList;
+
+    @NotNull
+    private Date receivedAt;
 
     Integer fake = 0;
 
-    public GaenKey() {
+    public String getKey() {
+        return this.key;
     }
 
-    public GaenKey(String keyData, Integer rollingStartNumber, Integer rollingPeriod, Integer transmissionRiskLevel) {
-        this.keyData = keyData;
-        this.rollingStartNumber = rollingStartNumber;
-        this.rollingPeriod = rollingPeriod;
-        this.transmissionRiskLevel = transmissionRiskLevel;
-    }
-
-    public String getKeyData() {
-        return this.keyData;
-    }
-
-    public void setKeyData(String keyData) {
-        this.keyData = keyData;
+    public void setKey(String keyData) {
+        this.key = keyData;
     }
 
     public Integer getRollingStartNumber() {
@@ -67,6 +72,12 @@ public class GaenKey {
         this.transmissionRiskLevel = transmissionRiskLevel;
     }
 
+    public String getAppSource() { return appSource; }
+
+    public void setAppSource(String appSource) {
+        this.appSource = appSource;
+    }
+
     public ArrayList<String> getCountryCodeList() {
         return countryCodeList;
     }
@@ -75,12 +86,7 @@ public class GaenKey {
         this.countryCodeList = countryCodeList;
     }
 
-    public Integer getFake() {
-        return this.fake;
-    }
+    public Date getReceivedAt() { return this.receivedAt; }
 
-    public void setFake(Integer fake) {
-        this.fake = fake;
-    }
-
+    public void setReceivedAt(Date date) { this.receivedAt = date; }
 }

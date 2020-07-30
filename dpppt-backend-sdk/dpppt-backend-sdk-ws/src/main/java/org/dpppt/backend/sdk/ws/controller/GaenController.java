@@ -19,11 +19,12 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -37,6 +38,7 @@ import org.dpppt.backend.sdk.model.gaen.GaenRequest;
 import org.dpppt.backend.sdk.model.gaen.GaenSecondDay;
 import org.dpppt.backend.sdk.model.gaen.GaenUnit;
 import org.dpppt.backend.sdk.model.gaen.Header;
+import org.dpppt.backend.sdk.ws.gateway.Gateway;
 import org.dpppt.backend.sdk.ws.security.ValidateRequest;
 import org.dpppt.backend.sdk.ws.security.ValidateRequest.InvalidDateException;
 import org.dpppt.backend.sdk.ws.security.signature.ProtoSignature;
@@ -80,10 +82,11 @@ public class GaenController {
 	private final Duration exposedListCacheControl;
 	private final PrivateKey secondDayKey;
 	private final ProtoSignature gaenSigner;
+	private final String appSource;
 
 	public GaenController(GAENDataService dataService, FakeKeyService fakeKeyService, ValidateRequest validateRequest,
 			ProtoSignature gaenSigner, ValidationUtils validationUtils, Duration bucketLength, Duration requestTime,
-			Duration exposedListCacheControl, PrivateKey secondDayKey) {
+			Duration exposedListCacheControl, PrivateKey secondDayKey, String appSource) {
 		this.dataService = dataService;
 		this.fakeKeyService = fakeKeyService;
 		this.bucketLength = bucketLength;
@@ -93,6 +96,7 @@ public class GaenController {
 		this.exposedListCacheControl = exposedListCacheControl;
 		this.secondDayKey = secondDayKey;
 		this.gaenSigner = gaenSigner;
+		this.appSource = appSource;
 	}
 
 	@PostMapping(value = "/exposed")
@@ -137,7 +141,7 @@ public class GaenController {
 			};
 		}
 		if (!nonFakeKeys.isEmpty()) {
-			dataService.upsertExposees(nonFakeKeys);
+			dataService.upsertExposees(nonFakeKeys, appSource, "local");
 		}
 
 		var delayedKeyDateDuration = Duration.of(gaenRequest.getDelayedKeyDate(), GaenUnit.TenMinutes);
@@ -212,7 +216,7 @@ public class GaenController {
 			}
 			List<GaenKey> keys = new ArrayList<>();
 			keys.add(gaenSecondDay.getDelayedKey());
-			dataService.upsertExposees(keys);
+			dataService.upsertExposees(keys, appSource, "local");
 		}
 		Callable<ResponseEntity<String>> cb = () -> {
 			normalizeRequestTime(now);
@@ -222,8 +226,14 @@ public class GaenController {
 
 	}
 
-	@GetMapping(value = "/exposed/{keyDate}", produces = "application/zip")
-	public @ResponseBody ResponseEntity<byte[]> getExposedKeys(@PathVariable long keyDate,
+	//Helper function to remove duplicate keys from returns
+	public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+		Set<Object> seen = ConcurrentHashMap.newKeySet();
+		return t -> seen.add(keyExtractor.apply(t));
+	}
+
+	@GetMapping(value = "/exposed/{keyDate}/{coi}", produces = "application/zip")
+	public @ResponseBody ResponseEntity<byte[]> getExposedKeys(@PathVariable long keyDate, @PathVariable String coi,
 			@RequestParam(required = false) Long publishedafter, WebRequest request)
 			throws BadBatchReleaseTimeException, IOException, InvalidKeyException, SignatureException,
 			NoSuchAlgorithmException {
@@ -238,7 +248,13 @@ public class GaenController {
 		// calculate exposed until bucket
 		long publishedUntil = now - (now % bucketLength.toMillis());
 
-		var exposedKeys = dataService.getSortedExposedForKeyDate(keyDate, publishedafter, publishedUntil);
+		String[] coiArray = coi.split(", ");
+
+		var exposedKeys = dataService.getLocalExposedForKeyDate(keyDate, publishedafter, publishedUntil);
+		for(String country : coiArray) {
+			exposedKeys.addAll(dataService.getExposedForKeyDateAndCountry(keyDate, publishedafter, publishedUntil, country));
+		}
+		exposedKeys = exposedKeys.stream().filter(distinctByKey(GaenKey::getKeyData)).collect(Collectors.toList());
 		exposedKeys = fakeKeyService.fillUpKeys(exposedKeys, publishedafter, keyDate);
 		if (exposedKeys.isEmpty()) {
 			return ResponseEntity.noContent().cacheControl(CacheControl.maxAge(exposedListCacheControl))
@@ -251,8 +267,9 @@ public class GaenController {
 				.header("X-PUBLISHED-UNTIL", Long.toString(publishedUntil)).body(payload.getZip());
 	}
 
-	@GetMapping(value = "/exposedjson/{keyDate}", produces = "application/json")
+	@GetMapping(value = "/exposedjson/{keyDate}/{coi}", produces = "application/json")
 	public @ResponseBody ResponseEntity<GaenExposedJson> getExposedKeysAsJson(@PathVariable long keyDate,
+																			  @PathVariable String coi,
 			@RequestParam(required = false) Long publishedafter, WebRequest request)
 			throws BadBatchReleaseTimeException {
 		if (!validationUtils.isValidKeyDate(keyDate)) {
@@ -266,7 +283,13 @@ public class GaenController {
 		// calculate exposed until bucket
 		long publishedUntil = now - (now % bucketLength.toMillis());
 
-		var exposedKeys = dataService.getSortedExposedForKeyDate(keyDate, publishedafter, publishedUntil);
+		String[] coiArray = coi.split(", ");
+
+		var exposedKeys = dataService.getLocalExposedForKeyDate(keyDate, publishedafter, publishedUntil);
+		for(String country : coiArray) {
+			exposedKeys.addAll(dataService.getExposedForKeyDateAndCountry(keyDate, publishedafter, publishedUntil, country));
+		}
+		exposedKeys = exposedKeys.stream().filter(distinctByKey(GaenKey::getKeyData)).collect(Collectors.toList());
 		if (exposedKeys.isEmpty()) {
 			return ResponseEntity.noContent().cacheControl(CacheControl.maxAge(exposedListCacheControl))
 					.header("X-PUBLISHED-UNTIL", Long.toString(publishedUntil)).build();
