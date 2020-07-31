@@ -22,15 +22,6 @@ public class Gateway {
     private Map<String, Set<String>> toBeDownloaded;
     private final ResponseParser responseParser;
 
-//    public Gateway(GAENDataService dataService, String appSource) {
-//        this.dataService = dataService;
-//        this.appSource = appSource;
-//        this.secrets = new Secrets();
-//        this.lastBatchTagMap = new HashMap<>();
-//        this.toBeDownloaded = new HashMap<>();
-//        this.responseParser = new ResponseParser();
-//    }
-
     public Gateway(DPPPTDataService dataService, String appSource) {
         this.dataService = dataService;
         this.appSource = appSource;
@@ -39,6 +30,15 @@ public class Gateway {
         this.toBeDownloaded = new HashMap<>();
         this.responseParser = new ResponseParser();
     }
+
+//    public Gateway(GAENDataService dataService, String appSource) {
+//        this.dataService = dataService;
+//        this.appSource = appSource;
+//        this.secrets = new Secrets();
+//        this.lastBatchTagMap = new HashMap<>();
+//        this.toBeDownloaded = new HashMap<>();
+//        this.responseParser = new ResponseParser();
+//    }
 
     //TODO: check if content with specific batchTag has been downloaded
     public void addToBeDownloaded(String date, String batchTag) {

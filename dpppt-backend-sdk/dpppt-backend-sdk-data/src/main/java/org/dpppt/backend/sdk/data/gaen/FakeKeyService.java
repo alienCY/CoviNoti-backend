@@ -68,7 +68,7 @@ public class FakeKeyService {
 		if (!isEnabled) {
 			return keys;
 		}
-		var fakeKeys = this.dataService.getSortedExposedForKeyDate(keyDate, publishedafter,
+		var fakeKeys = this.dataService.getLocalExposedForKeyDate(keyDate, publishedafter,
 				LocalDate.now().plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli());
 
 		keys.addAll(fakeKeys);

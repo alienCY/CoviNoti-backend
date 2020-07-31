@@ -28,16 +28,6 @@ public interface GAENDataService {
 	void upsertExposees(List<GaenKey> keys, String appSource, String collectionName);
 
 	/**
-	 * Returns all exposeed keys for the given batch.
-	 * 
-	 * @param keyDate
-	 * @param publishedAfter
-	 * @param publishedUntil
-	 * @return
-	 */
-	List<GaenKey> getSortedExposedForKeyDate(Long keyDate, Long publishedAfter, Long publishedUntil);
-
-	/**
 	 * Returns all exposees for the given rolling period and country.
 	 *
 	 * @param keyDate

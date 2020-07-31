@@ -53,38 +53,6 @@ public class JDBCGAENDataServiceImpl implements GAENDataService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<GaenKey> getSortedExposedForKeyDate(Long keyDate, Long publishedAfter, Long publishedUntil) {
-//      FOR REFERENCE ONLY - TO BE REMOVED!
-//		MapSqlParameterSource params = new MapSqlParameterSource();
-//		params.addValue("rollingPeriodStartNumberStart",
-//				GaenUnit.TenMinutes.between(Instant.ofEpochMilli(0), Instant.ofEpochMilli(keyDate)));
-//		params.addValue("rollingPeriodStartNumberEnd", GaenUnit.TenMinutes.between(Instant.ofEpochMilli(0),
-//				Instant.ofEpochMilli(keyDate).atOffset(ZoneOffset.UTC).plusDays(1).toInstant()));
-//		params.addValue("publishedUntil", new Date(publishedUntil))
-// 		String sql = "select pk_exposed_id, key, rolling_start_number, rolling_period, transmission_risk_level from t_gaen_exposed where"
-//				+ " rolling_start_number >= :rollingPeriodStartNumberStart"
-//				+ " and rolling_start_number < :rollingPeriodStartNumberEnd"
-//				+ " and received_at < :publishedUntil";
-
-		Query query = new Query();
-		query.addCriteria(
-				Criteria.where("rollingStartNumber").gte(GaenUnit.TenMinutes.between(Instant.ofEpochMilli(0), Instant.ofEpochMilli(keyDate)))
-						.andOperator(Criteria.where("rollingStartNumber").lt(GaenUnit.TenMinutes.between(Instant.ofEpochMilli(0),
-								Instant.ofEpochMilli(keyDate).atOffset(ZoneOffset.UTC).plusDays(1).toInstant())))
-		);
-		query.addCriteria(
-				Criteria.where("receivedAt").lt(new Date(publishedUntil))
-		);
-		if(publishedAfter != null)
-			query.addCriteria(
-					Criteria.where("receivedAt").gte(new Date(publishedAfter))
-			);
-
-		return mapper.unDoc(mongoTemplate.find(query, GaenKeyDoc.class, "local"));
-	}
-
-	@Override
-	@Transactional(readOnly = true)
 	public List<GaenKey> getExposedForKeyDateAndCountry(Long keyDate, Long publishedAfter, Long publishedUntil, String country) {
 		Query query = new Query();
 		query.addCriteria(
